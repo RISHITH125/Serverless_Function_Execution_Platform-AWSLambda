@@ -17,8 +17,8 @@ async def store_function(function: Function, authorization: str = Header(...)):
         await db["functions"].insert_one(function_dict)
     except Exception as e:
         if "duplicate key error" in str(e):
-            raise HTTPException(409, f"Function with same name or route exists: {e}")
-        raise HTTPException(500, f"Error storing function: {e}")
+            raise HTTPException(409, f"Function with same name or route exists")
+        raise HTTPException(500, f"Error storing function")
     return {"message": "Function stored successfully"}
 
 
