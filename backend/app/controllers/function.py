@@ -74,3 +74,13 @@ async def update_function(
     )
 
     return {"message": "Function updated successfully"}
+
+@router.get("/functions")
+async def get_functions(authorization: str = Header(...)):
+    username = await validate_user(authorization)
+
+    functions = await db["functions"].find({"username": username}).to_list(length=None)
+    for function in functions:
+        function.pop("_id", None)
+        function.pop("username", None)
+    return functions
