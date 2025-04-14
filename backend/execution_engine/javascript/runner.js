@@ -1,15 +1,35 @@
 async function executeFunction(code, args) {
-  let result;
+  let result; const logs = []; const errors = [];
+
+  const originalLog = console.log;
+  const originalError = console.error;
+
+  console.log = (...msgs) => logs.push(msgs.join(" "));
+  console.error = (...msgs) => errors.push(msgs.join(" "));
+  
   try {
     const main = new Function(
       ...args.map((_, i) => `arg${i}`),
       code + "\nreturn main(...arguments);"
     );
-    result = { result: main(...args) };
+    const returnValue = main(...args);
+    result = {
+      returnValue: returnValue !== undefined ? returnValue : null,
+      logs: logs.length > 0 ? logs : null,
+      errors: errors.length > 0 ? errors : null,
+    }
+
   } catch (e) {
-    result = { error: e.toString() };
+    result = {
+      error: e.toString(),
+      logs,
+      errors: errors.length ? errors : [e.stack],
+    };
+  } finally {
+    console.log = originalLog;
+    console.error = originalError;
   }
-  console.log(JSON.stringify(result));
+  originalLog(JSON.stringify(result));
 }
 
 (async () => {
