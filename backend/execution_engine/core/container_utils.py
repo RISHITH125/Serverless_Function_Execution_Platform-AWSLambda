@@ -2,9 +2,14 @@ import docker
 import uuid
 import json
 import os
+import dotenv
 
 
 client = docker.from_env()
+
+dotenv.load_dotenv(".env.local")
+
+USE_GVISOR = os.getenv("RUNTIME") == "GVISOR"
 
 LANGUAGE_CONFIG = {
     "python": {
@@ -57,19 +62,24 @@ def start_container(language):
 
     container_name = f"{language}_runner_{uuid.uuid4().hex[:8]}"
 
-    container = client.containers.run(
+    host_config = client.api.create_host_config(runtime="runsc") if USE_GVISOR else None
+
+    container = client.api.create_container(
         image=config["image"],
         command=["sleep", "infinity"],
         name=container_name,
         stdin_open=True,
-        stdout=True,
-        stderr=True,
         detach=True,
         tty=True,
+        host_config=host_config,
     )
 
-    print(f"[+] Started container {container_name} for {language}")
-    return container
+    client.api.start(container=container.get("Id"))
+
+    print(
+        f"[+] Started container {container_name} for {language} with {'gVisor' if USE_GVISOR else 'default runtime'}"
+    )
+    return client.containers.get(container.get("Id"))
 
 
 def stop_container(container_id):

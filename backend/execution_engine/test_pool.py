@@ -23,6 +23,7 @@ function main(a, b) {
 }
 """
 
+
 # This will run the blocking function in a thread
 async def run_exec_in_thread(pool, args, loop, executor):
     container = await pool.get_available_container("javascript")
@@ -32,10 +33,13 @@ async def run_exec_in_thread(pool, args, loop, executor):
 
     try:
         print(f"Executing function in container {container.name} with args: {args}")
-        result = await loop.run_in_executor(executor, exec_function, container, sample_code, args, "javascript")
+        result = await loop.run_in_executor(
+            executor, exec_function, container, sample_code, args, "javascript"
+        )
         print(f"Execution result: {result}")
     finally:
         await pool.release_container(container)
+
 
 async def main():
     # pool config
@@ -55,7 +59,7 @@ async def main():
     # First batch of requests (run in parallel threads)
     await asyncio.gather(
         run_exec_in_thread(pool, (), loop, executor),
-        run_exec_in_thread(pool, (1,2), loop, executor),
+        run_exec_in_thread(pool, (1, 2), loop, executor),
         run_exec_in_thread(pool, (), loop, executor),
     )
 
@@ -75,4 +79,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

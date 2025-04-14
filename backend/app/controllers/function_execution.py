@@ -1,55 +1,64 @@
-from fastapi import APIRouter, HTTPException ,Request
+from fastapi import APIRouter, HTTPException, Request
 import asyncio
 from app.database.mongodb import db
 from execution_engine.core.container_utils import exec_function
 
 router = APIRouter()
 
-@router.post("/{username}/execute/{function_name}/{route}")
-async def run_function(username:str,function_name:str,route:str,request:Request):
-    
-    try:
-        body= await request.json()
-        args=body.get("args", [])
-    except Exception as e:
-        args=[]
 
-    function = await db["functions"].find_one({
-        "username": username,
-        "name": function_name,
-        "route": f"/{route}",
-    })
+@router.post("/{username}/execute/{function_name}/{route}")
+async def run_function(username: str, function_name: str, route: str, request: Request):
+
+    try:
+        body = await request.json()
+        args = body.get("args", [])
+    except Exception as e:
+        args = []
+
+    function = await db["functions"].find_one(
+        {
+            "username": username,
+            "name": function_name,
+            "route": f"/{route}",
+        }
+    )
 
     if not function:
-            raise HTTPException(404, "Function not found")
-    
+        raise HTTPException(404, "Function not found")
+
     language = function["language"]
     code = function["code"]
     timeout = function["timeout"]
     function_name = function["name"]
-    PoolManager=request.app.state.pool
+    PoolManager = request.app.state.pool
     if not PoolManager:
         raise HTTPException(503, "No available pool manager")
     print(f"[+] Timeout for function {function_name}: {timeout} seconds")
-    container =await PoolManager.get_available_container(language)
+    container = await PoolManager.get_available_container(language)
     if not container:
         raise HTTPException(503, "No available containers")
     try:
-        print(f"[+] Running function {function_name} in container {container.name} with args {args}")
+        print(
+            f"[+] Running function {function_name} in container {container.name} with args {args}"
+        )
         result = await asyncio.wait_for(
             asyncio.to_thread(exec_function, container, code, args, language),
-            timeout=timeout/1000
+            timeout=timeout / 1000,
         )
     except asyncio.TimeoutError:
-        print(f"[!] Execution of function {function_name} timed out in container {container.name}")
+        print(
+            f"[!] Execution of function {function_name} timed out in container {container.name}"
+        )
+
         async def stop_container():
             await PoolManager.forceStopContainer(container)
-        stop_container()
+
+        await stop_container()
         raise HTTPException(408, "Function execution timed out")
     except Exception as e:
         print(f"Error executing function {function_name}: {str(e)}")
         raise HTTPException(500, f"Error executing function: {str(e)}")
     finally:
-         await PoolManager.release_container(container)
+        await PoolManager.release_container(container)
 
-    return result  
+    return result
