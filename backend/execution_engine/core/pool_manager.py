@@ -16,15 +16,23 @@ class WarmPoolManager:
 
     async def _initialize_pools(self):
         for language , conf in self.config.items():
-            self.pools[language] = []
-            for _ in range(conf["initial"]):
-                container = await asyncio.to_thread(start_container, language)
-                self.pools[language].append({'container': container, 'busy': False})
-            print(f"[+] Initialized container for {language}")
+            if language not in self.pools:
+                self.pools[language] = []
+                for _ in range(conf["initial"]):
+                    container = await asyncio.to_thread(start_container, language)
+                    self.pools[language].append({'container': container, 'busy': False})
+                print(f"[+] Initialized container for {language}")
         
     async def get_available_container(self, language):
         async with self.lock:
             pool = self.pools.get(language,[])
+
+            if not pool:
+                self.pools[language] = []
+                for _ in range(self.config[language]["initial"]):
+                    container = await asyncio.to_thread(start_container, language)
+                    self.pools[language].append({'container': container, 'busy': False})
+                pool = self.pools[language]
             for entry in pool:
                 if not entry['busy'] and is_container_alive(entry['container']):
                     entry['busy'] = True
@@ -41,12 +49,13 @@ class WarmPoolManager:
     
     async def release_container(self, container):
         async with self.lock:
-            for entry in self.pools.values():
-                for entry in entry:
+            for pool in self.pools.values():
+                for entry in pool:
                     if entry['container'].id == container.id:
                         entry['busy'] = False
                         print(f"[+] Released container {container.id}")
                         return
+
 
     async def scale_down_idle(self,timeout=60):
         """
@@ -75,4 +84,16 @@ class WarmPoolManager:
                         await asyncio.to_thread(stop_container, entry['container'].id)
                 self.pools[language] = []
         print("[-] Shutdown all containers and cleared pools")
+        return True
+    
+    async def forceStopContainer(self,container):
+        async with self.lock:
+            for pool in self.pools.values():
+                for entry in pool:
+                    if entry['container'].id == container.id:
+                        await asyncio.to_thread(stop_container, container.id)
+                        pool.remove(entry)
+                        print(f"[-] Force stopped container {container.id}")
+                        return True
+
         return True

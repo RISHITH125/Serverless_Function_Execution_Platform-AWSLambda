@@ -1,0 +1,10 @@
+{
+    "python": {
+        "initial": 2,
+        "max": 5
+    },
+    "javascript": {
+        "initial": 2,
+        "max": 5
+    }
+}
