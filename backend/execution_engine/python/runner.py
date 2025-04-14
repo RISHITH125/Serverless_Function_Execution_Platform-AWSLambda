@@ -18,7 +18,6 @@ def main_wrap(code:str) ->str:
     return f"def main(*args):\n{indented_code}"
 
 def execute_function(code, args):
-    exec_globals = {}
     logs = []
     errors = []
     result = None
