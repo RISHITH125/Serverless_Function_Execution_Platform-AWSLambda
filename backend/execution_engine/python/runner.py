@@ -30,6 +30,10 @@ import io
 import contextlib
 import builtins
 
+def main_wrap(code:str) ->str:
+    indented_code = "\n".join([f"    {line}" for line in code.splitlines()])
+    return f"def main(*args):\n{indented_code}"
+
 def execute_function(code, args):
     exec_globals = {}
     logs = []
@@ -57,6 +61,13 @@ def execute_function(code, args):
                 'tuple': tuple,
                 'abs': abs,
                 'sum': sum,
+                "Exception": Exception,
+                "ValueError": ValueError,
+                "TypeError": TypeError,
+                "KeyError": KeyError,
+                "IndexError": IndexError,
+                "AttributeError": AttributeError,
+                "NameError": NameError,
                 '__builtins__': {}
             }
 
@@ -70,13 +81,19 @@ def execute_function(code, args):
                 raise ImportError(f"Import of module '{name}' is not allowed.")
 
             safe_builtins['__import__'] = safe_import
-
-            exec(code, {"__builtins__": safe_builtins}, exec_globals)
+            
+            try:
+                exec(code,{"__builtins__": safe_builtins}, exec_globals)
+            except Exception as e:
+                code = main_wrap(code)
+                exec_globals = {}
+                exec(code, {"__builtins__": safe_builtins}, exec_globals)
 
             if "main" in exec_globals:
                 result = exec_globals["main"](*args)
             else:
                 errors.append("No 'main' function defined.")
+
     except Exception as e:
         errors.append(str(e))
 
