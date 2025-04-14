@@ -2,8 +2,9 @@ import asyncio
 import time
 from .container_utils import start_container, stop_container, is_container_alive
 
+
 class WarmPoolManager:
-    def __init__(self,config):
+    def __init__(self, config):
         self.pools = {}
         self.lock = asyncio.Lock()
         self.config = config
@@ -34,19 +35,21 @@ class WarmPoolManager:
                     self.pools[language].append({'container': container, 'busy': False})
                 pool = self.pools[language]
             for entry in pool:
-                if not entry['busy'] and is_container_alive(entry['container']):
-                    entry['busy'] = True
-                    return entry['container']
+                if not entry["busy"] and is_container_alive(entry["container"]):
+                    entry["busy"] = True
+                    return entry["container"]
 
             # If no available container, create a new one if within limit
             if len(pool) < self.config[language]["max"]:
                 container = await asyncio.to_thread(start_container, language)
-                self.pools[language].append({"container": container, 'busy': True})
+                self.pools[language].append({"container": container, "busy": True})
                 return container
             else:
-                print(f"[!] No available container for {language} and max limit reached")
+                print(
+                    f"[!] No available container for {language} and max limit reached"
+                )
                 return None
-    
+
     async def release_container(self, container):
         async with self.lock:
             for pool in self.pools.values():
@@ -69,19 +72,22 @@ class WarmPoolManager:
                     for entry in pool:
                         if len(pool) <= initialize_size:
                             break
-                        if not entry['busy'] and is_container_alive(entry['container']):
-                            print(f"[-] Scaling down container {entry['container'].id} for {language}")
-                            await asyncio.to_thread(stop_container, entry['container'].id)
+                        if not entry["busy"] and is_container_alive(entry["container"]):
+                            print(
+                                f"[-] Scaling down container {entry['container'].id} for {language}"
+                            )
+                            await asyncio.to_thread(
+                                stop_container, entry["container"].id
+                            )
                             pool.remove(entry)
             time.sleep(timeout)
-
 
     async def shutdown(self):
         async with self.lock:
             for language, pool in self.pools.items():
                 for entry in pool:
-                    if is_container_alive(entry['container']):
-                        await asyncio.to_thread(stop_container, entry['container'].id)
+                    if is_container_alive(entry["container"]):
+                        await asyncio.to_thread(stop_container, entry["container"].id)
                 self.pools[language] = []
         print("[-] Shutdown all containers and cleared pools")
         return True

@@ -1,6 +1,7 @@
 import sys
 import json
 
+
 def execute_function(code, args):
     exec_globals = {}
     try:
@@ -12,6 +13,7 @@ def execute_function(code, args):
             return {"error": "No 'main' function defined."}
     except Exception as e:
         return {"error": str(e)}
+
 
 if __name__ == "__main__":
     try:

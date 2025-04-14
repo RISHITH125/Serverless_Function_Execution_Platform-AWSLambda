@@ -72,5 +72,7 @@ async def main():
     executor.shutdown(wait=True)
     print("Pool shutdown complete")
 
+
 if __name__ == "__main__":
     asyncio.run(main())
+
