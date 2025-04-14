@@ -6,7 +6,7 @@ from app.core.config import DOMAIN
 
 router = APIRouter()
 
-domain = "http://localhost:8000" or DOMAIN 
+domain = DOMAIN or "http://localhost:8000"  
 
 
 @router.post("/function")
