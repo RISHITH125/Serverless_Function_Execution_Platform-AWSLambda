@@ -9,16 +9,15 @@ from core.container_utils import exec_function
 # """
 
 # JAVASCRIPT
-sample_code="""
+sample_code = """
 function main(x,y){
     return x+y;
 }
-""" 
+"""
 
 
-
-async def test_execution(pool,args):
-    container =await pool.get_available_container("javascript")
+async def test_execution(pool, args):
+    container = await pool.get_available_container("javascript")
     # container2=await pool.get_available_container("javascript")
     # if container:
     #     result = await exec_function(container, sample_code, args)
@@ -31,12 +30,12 @@ async def test_execution(pool,args):
         return None
     try:
         print(f"Executing function in container {container.name} with args: {args}")
-        result = exec_function(container, sample_code, args,"javascript")
+        result = exec_function(container, sample_code, args, "javascript")
         print(f"Execution result: {result}")
     finally:
         await pool.release_container(container)
 
-    
+
 async def main():
     # create a pool with 2 python containers
     config = {
@@ -65,6 +64,7 @@ async def main():
     # clenaup
     await pool.shutdown()
     print("Pool shutdown complete")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -16,8 +16,9 @@ LANGUAGE_CONFIG = {
         "dockerfile_path": os.path.join(os.path.dirname(__file__), "../javascript"),
         "image": "javascript-function-runner",
         "exec_cmd": ["node", "runner.js"],
-    }
+    },
 }
+
 
 def build_image(language):
     config = LANGUAGE_CONFIG.get(language)
@@ -27,19 +28,18 @@ def build_image(language):
     image_name = config["image"]
     image_path = config["dockerfile_path"]
     if not os.path.isdir(image_path):
-        raise RuntimeError(f"Dockerfile path '{image_path}' does not exist or is not a directory.")
+        raise RuntimeError(
+            f"Dockerfile path '{image_path}' does not exist or is not a directory."
+        )
 
     images = client.images.list(name=image_name)
     if not images:
         print(f"[!] Image '{image_name}' not found. Building it...")
         try:
-            image, logs = client.images.build(
-                path=image_path,
-                tag=image_name
-            )
+            image, logs = client.images.build(path=image_path, tag=image_name)
             for chunk in logs:
-                if 'stream' in chunk:
-                    print(chunk['stream'].strip())
+                if "stream" in chunk:
+                    print(chunk["stream"].strip())
             print(f"[+] Successfully built image '{image_name}'")
         except Exception as e:
             raise RuntimeError(f"Failed to build image '{image_name}': {e}")
@@ -54,12 +54,12 @@ def start_container(language):
     config = LANGUAGE_CONFIG.get(language)
     if config is None:
         raise ValueError(f"Unsupported language: {language}")
-    
+
     container_name = f"{language}_runner_{uuid.uuid4().hex[:8]}"
-    
+
     container = client.containers.run(
         image=config["image"],
-        command=['sleep', 'infinity'],
+        command=["sleep", "infinity"],
         name=container_name,
         stdin_open=True,
         stdout=True,
@@ -71,6 +71,7 @@ def start_container(language):
     print(f"[+] Started container {container_name} for {language}")
     return container
 
+
 def stop_container(container_id):
     try:
         container = client.containers.get(container_id)
@@ -80,19 +81,19 @@ def stop_container(container_id):
     except docker.errors.NotFound:
         print(f"[!] Container {container_id} not found for stop request")
 
+
 def exec_function(container, code, args, language):
     try:
-        input_data = {
-            "code": code,
-            "args": args
-        }
+        input_data = {"code": code, "args": args}
 
         input_json = json.dumps(input_data)
         config = LANGUAGE_CONFIG.get(language)
         if config is None:
-            return {"error": f"Unsupported language: {container.image.tags[0].split(':')[0]}"}
-        
-        cmd= config["exec_cmd"] + [input_json]
+            return {
+                "error": f"Unsupported language: {container.image.tags[0].split(':')[0]}"
+            }
+
+        cmd = config["exec_cmd"] + [input_json]
 
         exec_result = container.exec_run(
             cmd,
@@ -109,14 +110,14 @@ def exec_function(container, code, args, language):
         try:
             return json.loads(stdout.decode("utf-8").strip())
         except json.JSONDecodeError:
-            return {"error": "Failed to decode JSON output","raw":stdout.decode()}
+            return {"error": "Failed to decode JSON output", "raw": stdout.decode()}
     except Exception as e:
         return {"error": str(e)}
-    
+
 
 def is_container_alive(container):
     try:
         container.reload()
-        return container.status == 'running'
+        return container.status == "running"
     except docker.errors.NotFound:
         return False
