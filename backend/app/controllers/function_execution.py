@@ -6,7 +6,7 @@ from execution_engine.core.container_utils import exec_function
 router = APIRouter()
 
 
-@router.post("/{username}/execute/{function_name}/{route}")
+@router.post("/{username}/execute/{function_name}/{route:path}")
 async def run_function(username: str, function_name: str, route: str, request: Request):
 
     try:

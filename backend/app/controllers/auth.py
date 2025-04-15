@@ -14,7 +14,7 @@ async def signup(user: User):
         raise HTTPException(status_code=409, detail="User already exists")
     await db["users"].insert_one(user.dict())
     token = create_jwt_token({"sub": user.username})
-    return {"access_token": token}
+    return {"access_token": token, "username": user.username}
 
 
 @router.post("/login")
@@ -25,4 +25,4 @@ async def login(user: User):
     if not check_passwords_match(user.password, existing["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_jwt_token({"sub": user.username})
-    return {"access_token": token}
+    return {"access_token": token, "username": user.username}

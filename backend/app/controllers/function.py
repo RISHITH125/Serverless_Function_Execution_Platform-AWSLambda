@@ -95,4 +95,5 @@ async def get_functions(authorization: str = Header(...)):
     for function in functions:
         function.pop("_id", None)
         function.pop("username", None)
+        function["url"] = domain + "/" + username + "/execute/" + function["name"] + function["route"]
     return functions
