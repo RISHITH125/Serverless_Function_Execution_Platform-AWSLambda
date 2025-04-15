@@ -27,6 +27,7 @@ export default function Home() {
       const authFn = type === 'login' ? login : signup;
       const response = await authFn(username, password);
       setToken(response.access_token);
+      localStorage.setItem("cc-serverless-username", response.username)
       localStorage.setItem("cc-serverless-accesstoken", response.access_token)
       toast({
         title: `${type === 'login' ? 'Logged in' : 'Signed up'} successfully`,

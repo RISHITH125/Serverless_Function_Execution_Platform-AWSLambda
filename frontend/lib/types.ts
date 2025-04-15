@@ -4,8 +4,10 @@ export interface ServerlessFunction {
   language: string;
   timeout: number;
   code: string;
+  url?: string;
 }
 
 export interface AuthResponse {
   access_token: string;
+  username: string;
 }

@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { AuthResponse, ServerlessFunction } from "./types";
+
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export async function signup(username: string, password: string): Promise<AuthResponse> {
   const response = await fetch(`${API_URL}/signup`, {

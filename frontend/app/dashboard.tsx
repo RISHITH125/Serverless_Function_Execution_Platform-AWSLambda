@@ -16,6 +16,7 @@ export default function Dashboard() {
   const { token, setToken } = useAuth();
   const [functions, setFunctions] = useState<ServerlessFunction[]>([]);
   const [selectedFunction, setSelectedFunction] = useState<ServerlessFunction | null>(null);
+  const [isNewFunctionDialogOpen, setIsNewFunctionDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function Dashboard() {
 
   const loadFunctions = async () => {
     try {
-      const data = await getFunctions(token!);
+      let data = await getFunctions(token!);
       setFunctions(data);
     } catch (error) {
       toast({
@@ -45,6 +46,7 @@ export default function Dashboard() {
         await createFunction(token!, func);
       }
       loadFunctions();
+      setIsNewFunctionDialogOpen(false)
       toast({
         title: `Function ${isEdit ? 'updated' : 'created'} successfully`,
         description: `${func.name} has been ${isEdit ? 'updated' : 'created'}.`,
@@ -81,7 +83,7 @@ export default function Dashboard() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Serverless Functions</h1>
           <div className="space-x-4">
-            <Dialog>
+            <Dialog open={isNewFunctionDialogOpen} onOpenChange={setIsNewFunctionDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
@@ -92,26 +94,27 @@ export default function Dashboard() {
                 <DialogHeader>
                   <DialogTitle>Create New Function</DialogTitle>
                 </DialogHeader>
-                <FunctionForm onSubmit={(func) => handleSubmit(func, false)} />
+                <FunctionForm onSubmit={(func) => handleSubmit(func, false, 1)} />
               </DialogContent>
             </Dialog>
             <Button variant="outline" onClick={() => {
               setToken(null)
               localStorage.removeItem("cc-serverless-accesstoken");
+              localStorage.removeItem("cc-serverless-username");
             }}>
               Logout
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {functions.map((func) => (
+        <div className="flex flex-col gap-6">
+          {functions.map((func, index) => (
             <Card key={func.name}>
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                   <span>{func.name}</span>
                   <div className="space-x-2">
-                    <Dialog>
+                    <Dialog> 
                       <DialogTrigger asChild>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
@@ -121,14 +124,14 @@ export default function Dashboard() {
                         <DialogHeader>
                           <DialogTitle>Edit Function</DialogTitle>
                         </DialogHeader>
-                        <FunctionForm 
+                        <FunctionForm
                           initialData={func}
-                          onSubmit={(updatedFunc) => handleSubmit(updatedFunc, true)} 
+                          onSubmit={(updatedFunc) => handleSubmit(updatedFunc, true)}
                         />
                       </DialogContent>
                     </Dialog>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(func.name)}
                     >
@@ -142,6 +145,7 @@ export default function Dashboard() {
                   <p><strong>Route:</strong> {func.route}</p>
                   <p><strong>Language:</strong> {func.language}</p>
                   <p><strong>Timeout:</strong> {func.timeout}ms</p>
+                  <p><strong>URL:</strong> {func.url}</p>
                   <div className="mt-4">
                     <p className="font-semibold mb-2">Code:</p>
                     <pre className="bg-muted p-2 rounded-md overflow-x-auto">
@@ -158,10 +162,10 @@ export default function Dashboard() {
   );
 }
 
-function FunctionForm({ 
+function FunctionForm({
   initialData,
-  onSubmit 
-}: { 
+  onSubmit
+}: {
   initialData?: ServerlessFunction;
   onSubmit: (func: ServerlessFunction) => void;
 }) {
