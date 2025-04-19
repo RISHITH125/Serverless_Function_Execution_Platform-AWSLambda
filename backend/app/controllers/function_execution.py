@@ -1,3 +1,4 @@
+import time
 from fastapi import APIRouter, HTTPException, Request
 import asyncio
 from app.database.mongodb import db
@@ -41,6 +42,7 @@ async def run_function(username: str, function_name: str, route: str, request: R
         print(
             f"[+] Running function {function_name} in container {container.name} with args {args}"
         )
+        start_time = time.monotonic()
         result = await asyncio.wait_for(
             asyncio.to_thread(exec_function, container, code, args, language),
             timeout=timeout / 1000,
@@ -59,6 +61,16 @@ async def run_function(username: str, function_name: str, route: str, request: R
         print(f"Error executing function {function_name}: {str(e)}")
         raise HTTPException(500, f"Error executing function: {str(e)}")
     finally:
+        end_time = time.monotonic()
+        elapsed_time = end_time - start_time
+        
         await PoolManager.release_container(container)
-
+        # Add the elapsed time to the result
+        if isinstance(result, dict):
+            result["execution_time_seconds"] = round(elapsed_time, 4)
+        else:
+            result = {
+                "result": result,
+                "execution_time_seconds": round(elapsed_time, 4)
+            }
     return result
