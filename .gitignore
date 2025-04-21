@@ -5,6 +5,7 @@ __pycache__/
 node_modules/
 .vscode/
 venv/
+myenv/
 .venv/
 .idea/
 next-env/
