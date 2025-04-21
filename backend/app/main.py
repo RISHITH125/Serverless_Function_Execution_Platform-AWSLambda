@@ -36,7 +36,7 @@ async def startup():
 
 @app.on_event("shutdown")
 async def shutdown():
-    await app.state.pool.shutdown()
+    await app.state.pool.forceStopContainer()
 
 @app.get("/hello")
 async def read_root():

@@ -58,36 +58,59 @@ async def run_function(username: str, function_name: str, route: str, request: R
             await PoolManager.forceStopContainer(container)
 
         await stop_container()
+
+        # asyncio.create_task(stop_container(PoolManager, container))
+
+
         raise HTTPException(408, "Function execution timed out")
     except Exception as e:
         print(f"Error executing function {function_name}: {str(e)}")
         raise HTTPException(500, f"Error executing function: {str(e)}")
     finally:
-        end_time = time.monotonic()
-        elapsed_time = end_time - start_time
-
-        # make an api call to metrics server which takes the (route, execution time)
-        headers = {
-            "Content-Type": "application/json"
-        }
-
-        routeInfo = f"{username}_{function_name}"
-
-        data = {
-            "route": routeInfo,
-            "executiontime": elapsed_time
-        }   
-
-        response = requests.post(metrics_service_url, headers=headers, json=data)
-
-        if (response.status_code == 204):
-            print(f"Metrics for the endpoint {routeInfo}. Execution time was {elapsed_time}")
         
-        await PoolManager.release_container(container)
-        # Add the elapsed time to the result
-        if isinstance(result, dict):
-            result["execution_time_seconds"] = round(elapsed_time, 4)
-        else:
-            raise HTTPException(500, f"Result is not an instance of dictionary, could be None:\n {str(e)}")
-            
+
+            # Only measure time if no timeout occurred
+            end_time = time.monotonic()
+            elapsed_time = end_time - start_time
+
+            # Make an API call to the metrics server (uncomment to enable it)
+            headers = {
+                "Content-Type": "application/json"
+            }
+
+            routeInfo = f"{username}_{function_name}"
+
+            data = {
+                "route": routeInfo,
+                "executiontime": elapsed_time
+            }
+
+            # response = requests.post(metrics_service_url, headers=headers, json=data)
+
+            # if (response.status_code == 204):
+            #     print(f"Metrics for the endpoint {routeInfo}. Execution time was {elapsed_time}")
+
+            await PoolManager.release_container(container)
+
+            # # Add the elapsed time to the result
+            # if isinstance(result, dict):
+            #     result["execution_time_seconds"] = round(elapsed_time, 4)
+            # else:
+            #     raise HTTPException(500, f"Result is not an instance of dictionary, could be None:\n {str(e)}")
+            try:
+                if isinstance(result, dict):
+                    result["execution_time_seconds"] = round(elapsed_time, 4)
+                else:
+                    raise HTTPException(500, f"Result is not an instance of dictionary, could be None:\n {str(e)}")
+            except Exception as e:
+                print(f"Error adding execution time to result: {str(e)}")
+                raise HTTPException(408, f"Function execution timed out")
+
+
     return result
+
+
+
+async def stop_container(PoolManager, container):
+    await PoolManager.forceStopContainer(container)
+    print(f"Stopped container {container.name} due to timeout.")
