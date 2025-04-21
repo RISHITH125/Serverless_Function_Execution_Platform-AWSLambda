@@ -69,8 +69,6 @@ async def run_function(username: str, function_name: str, route: str, request: R
         if isinstance(result, dict):
             result["execution_time_seconds"] = round(elapsed_time, 4)
         else:
-            result = {
-                "result": result,
-                "execution_time_seconds": round(elapsed_time, 4)
-            }
+            raise HTTPException(500, f"Result is not an instance of dictionary, could be None:\n {str(e)}")
+            
     return result
