@@ -3,9 +3,11 @@ from fastapi import APIRouter, HTTPException, Request
 import asyncio
 from app.database.mongodb import db
 from execution_engine.core.container_utils import exec_function
+import requests
 
 router = APIRouter()
 
+metrics_service_url = "http://localhost:8080/update/metrics"
 
 @router.post("/{username}/execute/{function_name}/{route:path}")
 async def run_function(username: str, function_name: str, route: str, request: Request):
@@ -63,6 +65,23 @@ async def run_function(username: str, function_name: str, route: str, request: R
     finally:
         end_time = time.monotonic()
         elapsed_time = end_time - start_time
+
+        # make an api call to metrics server which takes the (route, execution time)
+        headers = {
+            "Content-Type": "application/json"
+        }
+
+        routeInfo = f"{username}_{function_name}"
+
+        data = {
+            "route": routeInfo,
+            "executiontime": elapsed_time
+        }   
+
+        response = requests.post(metrics_service_url, headers=headers, json=data)
+
+        if (response.status_code == 204):
+            print(f"Metrics for the endpoint {routeInfo}. Execution time was {elapsed_time}")
         
         await PoolManager.release_container(container)
         # Add the elapsed time to the result

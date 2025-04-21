@@ -6,6 +6,7 @@ import dotenv
 
 
 client = docker.from_env()
+# client = docker.DockerClient(base_url = "unix:///Users/rahulbaradol/.rd/docker.sock")
 
 dotenv.load_dotenv(".env.local")
 
