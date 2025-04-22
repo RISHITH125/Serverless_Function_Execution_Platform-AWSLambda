@@ -85,10 +85,10 @@ async def run_function(username: str, function_name: str, route: str, request: R
                 "executiontime": elapsed_time
             }
 
-            # response = requests.post(metrics_service_url, headers=headers, json=data)
+            response = requests.post(metrics_service_url, headers=headers, json=data)
 
-            # if (response.status_code == 204):
-            #     print(f"Metrics for the endpoint {routeInfo}. Execution time was {elapsed_time}")
+            if (response.status_code == 204):
+                print(f"Metrics for the endpoint {routeInfo}. Execution time was {elapsed_time}")
 
             await PoolManager.release_container(container)
 
