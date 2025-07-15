@@ -3,7 +3,7 @@ from fastapi import APIRouter, Header, HTTPException ,Request
 from app.models.function import Function
 from app.database.mongodb import db
 from app.core.config import DOMAIN
-
+import asyncio
 router = APIRouter()
 
 domain = DOMAIN or "http://localhost:8000"  
@@ -22,7 +22,8 @@ async def store_function(function: Function,  request: Request, authorization: s
         raise HTTPException(503, "No available pool manager")
     try:
         await db["functions"].insert_one(function_dict)
-        await PoolManager._initialize_pools()
+        asyncio.create_task(PoolManager._initialize_pools())
+
 
     except Exception as e:
         if "duplicate key error" in str(e):

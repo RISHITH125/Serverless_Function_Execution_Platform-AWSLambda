@@ -1,8 +1,8 @@
 from jose import jwt
+from jose.exceptions import ExpiredSignatureError, JWTError
 from datetime import datetime, timedelta
 from pytz import timezone
 from app.core.config import JWT_SECRET, ALGORITHM
-
 
 def create_jwt_token(data: dict):
     to_encode = data.copy()
@@ -10,6 +10,7 @@ def create_jwt_token(data: dict):
     to_encode.update({"exp": exp_time})
     return jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
 
-
 def decode_jwt_token(tok: str):
     return jwt.decode(tok, JWT_SECRET, algorithms=[ALGORITHM])
+
+__all__ = ["create_jwt_token", "decode_jwt_token", "ExpiredSignatureError", "JWTError"]

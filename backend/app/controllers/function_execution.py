@@ -72,39 +72,41 @@ async def run_function(username: str, function_name: str, route: str, request: R
             # Only measure time if no timeout occurred
             end_time = time.monotonic()
             elapsed_time = end_time - start_time
-
-            # Make an API call to the metrics server (uncomment to enable it)
-            headers = {
-                "Content-Type": "application/json"
-            }
-
+        
             routeInfo = f"{username}_{function_name}"
-
+            headers = {"Content-Type": "application/json"}
             data = {
                 "route": routeInfo,
                 "executiontime": elapsed_time
             }
-
-            response = requests.post(metrics_service_url, headers=headers, json=data)
-
-            if (response.status_code == 204):
-                print(f"Metrics for the endpoint {routeInfo}. Execution time was {elapsed_time}")
-
+        
+            # Attempt to send metrics (but ignore errors)
+            try:
+                response = requests.post(
+                    metrics_service_url,
+                    headers=headers,
+                    json=data,
+                    timeout=2  # don't wait forever
+                )
+                if response.status_code == 204:
+                    print(f"[✓] Metrics sent for {routeInfo} - execution time: {elapsed_time:.4f}s")
+                else:
+                    print(f"[!] Metrics server responded with status {response.status_code}")
+            except requests.RequestException as e:
+                print(f"[!] Could not send metrics: {str(e)}")
+        
+            # Release container no matter what
             await PoolManager.release_container(container)
-
-            # # Add the elapsed time to the result
-            # if isinstance(result, dict):
-            #     result["execution_time_seconds"] = round(elapsed_time, 4)
-            # else:
-            #     raise HTTPException(500, f"Result is not an instance of dictionary, could be None:\n {str(e)}")
+        
             try:
                 if isinstance(result, dict):
                     result["execution_time_seconds"] = round(elapsed_time, 4)
                 else:
-                    raise HTTPException(500, f"Result is not an instance of dictionary, could be None:\n {str(e)}")
+                    raise HTTPException(500, f"Result is not a dict: {str(result)}")
             except Exception as e:
-                print(f"Error adding execution time to result: {str(e)}")
-                raise HTTPException(408, f"Function execution timed out")
+                print(f"[!] Failed to attach execution time: {str(e)}")
+                raise HTTPException(500, "Internal error while processing result.")
+        
 
 
     return result

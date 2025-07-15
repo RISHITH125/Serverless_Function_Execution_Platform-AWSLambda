@@ -1,21 +1,33 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAuth } from './auth-provider';
-import { getFunctions, createFunction, updateFunction, deleteFunction } from '@/lib/api';
-import type { ServerlessFunction } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { Trash2, Edit, Plus } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useAuth } from "./auth-provider";
+import {
+  getFunctions,
+  createFunction,
+  updateFunction,
+  deleteFunction,
+} from "@/lib/api";
+import type { ServerlessFunction } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Trash2, Edit, Plus } from "lucide-react";
 
 export default function Dashboard() {
   const { token, setToken } = useAuth();
   const [functions, setFunctions] = useState<ServerlessFunction[]>([]);
-  const [selectedFunction, setSelectedFunction] = useState<ServerlessFunction | null>(null);
+  const [selectedFunction, setSelectedFunction] =
+    useState<ServerlessFunction | null>(null);
   const [isNewFunctionDialogOpen, setIsNewFunctionDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -46,15 +58,15 @@ export default function Dashboard() {
         await createFunction(token!, func);
       }
       loadFunctions();
-      setIsNewFunctionDialogOpen(false)
+      setIsNewFunctionDialogOpen(false);
       toast({
-        title: `Function ${isEdit ? 'updated' : 'created'} successfully`,
-        description: `${func.name} has been ${isEdit ? 'updated' : 'created'}.`,
+        title: `Function ${isEdit ? "updated" : "created"} successfully`,
+        description: `${func.name} has been ${isEdit ? "updated" : "created"}.`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to ${isEdit ? 'update' : 'create'} function`,
+        description: `Failed to ${isEdit ? "update" : "create"} function`,
         variant: "destructive",
       });
     }
@@ -83,7 +95,10 @@ export default function Dashboard() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Serverless Functions</h1>
           <div className="space-x-4">
-            <Dialog open={isNewFunctionDialogOpen} onOpenChange={setIsNewFunctionDialogOpen}>
+            <Dialog
+              open={isNewFunctionDialogOpen}
+              onOpenChange={setIsNewFunctionDialogOpen}
+            >
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
@@ -94,27 +109,30 @@ export default function Dashboard() {
                 <DialogHeader>
                   <DialogTitle>Create New Function</DialogTitle>
                 </DialogHeader>
-                <FunctionForm onSubmit={(func) => handleSubmit(func, false, 1)} />
+                <FunctionForm onSubmit={(func) => handleSubmit(func, false)} />
               </DialogContent>
             </Dialog>
-            <Button variant="outline" onClick={() => {
-              setToken(null)
-              localStorage.removeItem("cc-serverless-accesstoken");
-              localStorage.removeItem("cc-serverless-username");
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setToken(null);
+                localStorage.removeItem("cc-serverless-accesstoken");
+                localStorage.removeItem("cc-serverless-username");
+              }}
+            >
               Logout
             </Button>
           </div>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-row gap-6">
           {functions.map((func, index) => (
             <Card key={func.name}>
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                   <span>{func.name}</span>
                   <div className="space-x-2">
-                    <Dialog> 
+                    <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
@@ -126,7 +144,9 @@ export default function Dashboard() {
                         </DialogHeader>
                         <FunctionForm
                           initialData={func}
-                          onSubmit={(updatedFunc) => handleSubmit(updatedFunc, true)}
+                          onSubmit={(updatedFunc) =>
+                            handleSubmit(updatedFunc, true)
+                          }
                         />
                       </DialogContent>
                     </Dialog>
@@ -142,10 +162,18 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p><strong>Route:</strong> {func.route}</p>
-                  <p><strong>Language:</strong> {func.language}</p>
-                  <p><strong>Timeout:</strong> {func.timeout}ms</p>
-                  <p><strong>URL:</strong> {func.url}</p>
+                  <p>
+                    <strong>Route:</strong> {func.route}
+                  </p>
+                  <p>
+                    <strong>Language:</strong> {func.language}
+                  </p>
+                  <p>
+                    <strong>Timeout:</strong> {func.timeout}ms
+                  </p>
+                  <p>
+                    <strong>URL:</strong> {func.url}
+                  </p>
                   <div className="mt-4">
                     <p className="font-semibold mb-2">Code:</p>
                     <pre className="bg-muted p-2 rounded-md overflow-x-auto">
@@ -164,18 +192,18 @@ export default function Dashboard() {
 
 function FunctionForm({
   initialData,
-  onSubmit
+  onSubmit,
 }: {
   initialData?: ServerlessFunction;
   onSubmit: (func: ServerlessFunction) => void;
 }) {
   const [formData, setFormData] = useState<ServerlessFunction>(
     initialData || {
-      name: '',
-      route: '',
-      language: 'javascript',
+      name: "",
+      route: "",
+      language: "javascript",
       timeout: 1000,
-      code: '',
+      code: "",
     }
   );
 
@@ -200,7 +228,9 @@ function FunctionForm({
         <label className="text-sm font-medium">Language</label>
         <Input
           value={formData.language}
-          onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, language: e.target.value })
+          }
         />
       </div>
       <div className="space-y-2">
@@ -208,7 +238,9 @@ function FunctionForm({
         <Input
           type="number"
           value={formData.timeout}
-          onChange={(e) => setFormData({ ...formData, timeout: parseInt(e.target.value) })}
+          onChange={(e) =>
+            setFormData({ ...formData, timeout: parseInt(e.target.value) })
+          }
         />
       </div>
       <div className="space-y-2">
@@ -216,12 +248,36 @@ function FunctionForm({
         <Textarea
           value={formData.code}
           onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+          onKeyDown={(e) => {
+            if (e.key === "Tab") {
+              e.preventDefault();
+              const textarea = e.currentTarget;
+              const start = textarea.selectionStart;
+              const end = textarea.selectionEnd;
+
+              const newValue =
+                formData.code.substring(0, start) +
+                "\t" +
+                formData.code.substring(end);
+
+              setFormData({
+                ...formData,
+                code: newValue,
+              });
+
+              // Set cursor position after the tab character
+              requestAnimationFrame(() => {
+                textarea.selectionStart = textarea.selectionEnd = start + 1;
+              });
+            }
+          }}
+          placeholder="Write your function code here..."
           className="font-mono"
           rows={6}
         />
       </div>
       <Button className="w-full" onClick={() => onSubmit(formData)}>
-        {initialData ? 'Update' : 'Create'} Function
+        {initialData ? "Update" : "Create"} Function
       </Button>
     </div>
   );
