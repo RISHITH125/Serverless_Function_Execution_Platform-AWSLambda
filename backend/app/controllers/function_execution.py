@@ -2,7 +2,7 @@ import time
 from fastapi import APIRouter, HTTPException, Request
 import asyncio
 from app.database.mongodb import db
-from execution_engine.core.container_utils import exec_function
+# from execution_engine.core.container_utils import exec_function
 import requests
 
 router = APIRouter()
@@ -46,8 +46,8 @@ async def run_function(username: str, function_name: str, route: str, request: R
         )
         start_time = time.monotonic()
         result = await asyncio.wait_for(
-            asyncio.to_thread(exec_function, container, code, args, language),
-            timeout=timeout / 1000,
+            PoolManager.exec_function(container, code, args, language),
+            timeout=timeout
         )
     except asyncio.TimeoutError:
         print(
@@ -104,7 +104,7 @@ async def run_function(username: str, function_name: str, route: str, request: R
                 else:
                     raise HTTPException(500, f"Result is not a dict: {str(result)}")
             except Exception as e:
-                print(f"[!] Failed to attach execution time: {str(e)}")
+                print(f"[!] Failed to attach execution time: {str(e)} - result: {result}")
                 raise HTTPException(500, "Internal error while processing result.")
         
 

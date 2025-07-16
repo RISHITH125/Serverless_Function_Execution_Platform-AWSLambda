@@ -11,4 +11,5 @@ myenv/
 next-env/
 .next/
 .DS_Store
+.eXTENDING_Serverless/
 # 

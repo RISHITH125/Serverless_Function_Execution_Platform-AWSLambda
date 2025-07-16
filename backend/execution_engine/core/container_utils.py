@@ -3,6 +3,7 @@ import uuid
 import json
 import os
 import dotenv
+import subprocess
 
 
 client = docker.from_env()
