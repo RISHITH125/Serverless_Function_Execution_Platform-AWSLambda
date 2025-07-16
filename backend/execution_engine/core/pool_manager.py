@@ -118,7 +118,7 @@ class WarmPoolManager:
                     # if is_container_alive(entry["container"]):
                     if runtime.is_container_alive(entry["container"]):
                         # await asyncio.to_thread(stop_container, entry["container"].id)
-                        await asyncio.to_thread(runtime.stop_container, entry["container"])
+                        await asyncio.to_thread(runtime.stop_container, entry["container"].id)
                         
                 self.pools[language] = []
         print("[-] Shutdown all containers and cleared pools")
